@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Copy the SDK Dir
+rm -Rf Site
+cp -Rfv ../Analytics/Site Site
+
+# Copy the Bundles DIR
+rm -Rf Bundles
+cp -Rfv ../Analytics/Bundles Bundles
+
+# Delete all the bad files
+find * -name '.gitignore' -execdir rm -rf {} \;
+find * -name '.git' -execdir rm -rf {} \;
+find * -name '.DS_Store' -execdir rm -rf {} \;
+find * -name '.cache' -execdir rm -rf {} \;
+
+# Delete the whole cache directory
+rm -Rf Site/Runtime/cache/*
+
+# Commit to a deployment repo
+git init
+git add .
+git commit -a -m "Compiled on $(date) by $(git config user.name)"

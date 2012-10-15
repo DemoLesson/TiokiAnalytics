@@ -1,0 +1,143 @@
+<body :load=":e.tioki.users as users">
+	<h2 class="count">{users.all.count} Results</h2>
+	<:include file="_header.lhtml" />
+
+	<form method="GET">
+		<fieldset>
+			<legend>Logged In Date Range</legend>
+			<label>
+				<span>Date Start</span>
+				<input name="date_start" placeholder="2012-01-01" value="{:get.date_start}" />
+			</label>
+			<label>
+				<span>Date End</span>
+				<input name="date_end" placeholder="2012-01-01" value="{:get.date_end}" />
+			</label>
+		</fieldset>
+		<fieldset>
+			<legend>User Type Info</legend>
+			<label>
+				<span>User Type</span>
+				<:select name="user_type" selected="{:get.user_type}">
+					<option value="">- ALL -</option>
+					<option value="educator">Educator (Teacher)</option>
+					<option value="recruiter" disabled="disabled">Recruiter</option>
+					<option value="group" disabled="disabled">Group Owner</option>
+					<option value="organization">Organization (School)</option>
+				</:select>
+			</label>
+			<label>
+				<span>A/B Groups</span>
+				<:select name="user_test" selected="{:get.user_test}">
+					<option value="">- ALL -</option>
+					<:source :load="users.tests as test" :iterate="children">
+						<option value="{test}">{test}</option>
+					</:source>
+				</:select>
+			</label>
+		</fieldset>
+		<fieldset>
+			<legend>Narrowing Data</legend>
+			<label>
+				<span>ID Range</span>
+				<input name="range" placeholder="1~100" value="{:get.range}" />
+			</label>
+			<label>
+				<span>Percent Complete</span>
+				<input name="complete" placeholder="50 or 50< or 50> or 50-70" value="{:get.complete}" />
+			</label>
+		</fieldset>
+		<input type="submit" value="Filter" />
+	</form>
+
+	<div class="clear"></div>
+
+	<table>
+		<tr><th :load="users.all.fields as field" :iterate="self">{field}</th></tr>
+		<tr :load="users.all.totals as totals">
+			<td class="right"><strong>*</strong></td>
+			<td>All</td>
+			<td>N/A</td>
+			<td>{totals.events_rsvps.count}</td>
+			<:if cond="totals.all == true">
+				<td class="nowrap">
+					<strong>{totals.vouched_skills.count}</strong>
+					 ({totals.vouched_skills.raw})
+				</td>
+				<td class="nowrap">
+					<strong>{totals.skill_claims.count}</strong>
+					 ({totals.skill_claims.raw})
+				</td>
+				<td class="nowrap">
+					<strong>{totals.videos.count}</strong>
+					 ({totals.videos.raw})
+				</td>
+				<td class="nowrap">
+					<strong>{totals.connections.count}</strong>
+					 ({totals.connections.raw})
+				</td>
+				<:else>
+					<td>{totals.vouched_skills.count}</td>
+					<td>{totals.skill_claims.count}</td>
+					<td>{totals.videos.count}</td>
+					<td>{totals.connections.count}</td>
+				</:else>
+			</:if>
+			<td>{totals.completion.count}% - AVG</td>
+			<td>N/A</td>
+		</tr>
+		<tr><th :load="users.all.fields as field" :iterate="self">{field}</th></tr>
+		<tr :load="users.all.results as user" :iterate="self">
+			<td class="right"><strong>{user.id}</strong></td>
+			<td>{user.name} - LINK</td>
+			<td>{user.email}</td>
+			<td>{user.rsvp.count}</td>
+			<:if cond="users.totals.all == true">
+				<td class="nowrap">
+					<strong>{user.vouched_skills.count}</strong>
+					 ({user.vouched_skills.raw})
+				</td>
+				<td class="nowrap">
+					<strong>{user.skill_claims.count}</strong>
+					 ({user.skill_claims.raw})
+				</td>
+				<td class="nowrap">
+					<strong>{user.videos.count}</strong>
+					 ({user.videos.raw})
+				</td>
+				<td class="nowrap">
+					<strong>{user.connections.count}</strong>
+					 ({user.connections.raw})
+				</td>
+				<:else>
+					<td>{user.vouched_skills.count}</td>
+					<td>{user.skills.count}</td>
+					<td>{user.videos.count}</td>
+					<td>{user.connections.count}</td>
+				</:else>
+			</:if>
+			<td>{user.completion}%</td>
+			<td>{user.analytics}</td>
+		</tr>
+	</table>
+
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$('input[name="date_start"]').datepicker({
+			dateFormat: 'yy-mm-dd',
+			defaultDate: "-1m",
+			changeMonth: true,
+			onSelect: function( selectedDate ) {
+				$('input[name="date_end"]').datepicker("option", "minDate", selectedDate);
+			}
+		});
+		$('input[name="date_end"]').datepicker({
+			changeMonth: true,
+			dateFormat: 'yy-mm-dd',
+			onSelect: function( selectedDate ) {
+				$('input[name="date_start"]').datepicker("option", "maxDate", selectedDate);
+			}
+		});
+	});
+	</script>
+</body>

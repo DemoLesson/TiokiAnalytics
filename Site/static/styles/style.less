@@ -1,0 +1,157 @@
+.box-sizing(@val: border-box) {
+	box-sizing: @val;
+	-moz-box-sizing: @val;
+	-webkit-box-sizing: @val;
+}
+
+.border-radius(@val: 10px) {
+	border-radius: @val;
+	-moz-border-radius: @val;
+	-webkit-border-radius: @val;
+}
+
+// Set globals
+html {
+	color: #333;
+}
+
+// Clear
+div.clear {
+	display: block;
+	height: 1px;
+	width: 100%;
+	clear: both;
+}
+
+// Menu
+h1.header {
+	font-family: "Helvetica Neue", "Helvetica", Arial, serif;
+	margin-bottom: -10px;
+}
+
+// Menu
+h2.count {
+	font-family: "Helvetica Neue", "Helvetica", Arial, serif;
+	margin-bottom: -10px;
+	margin: 0px;
+	float:right;
+}
+
+ul.menu {
+	padding: 0px;
+	display: block;
+	list-style: none;
+	background: #888;
+
+	li {
+		display: inline-block;
+		padding: 5px 10px;
+		margin: 0px;
+		
+		a {
+			text-decoration: none;
+			color: #FFF;
+		}
+
+		&:hover {
+			background: #000;
+		}
+
+		&.right {
+			float: right;
+		}
+	}
+}
+
+ul.info-boxes {
+	padding: 0px;
+	display: block;
+	list-style: none;
+
+	li {
+		border: groove 2px #AAA;
+		display: inline-block;
+		padding: 5px 10px;
+		margin: 0px;
+
+		legend {
+			position: relative;
+			background: #FFF;
+			line-height: 5px;
+			top: -8px;
+		}
+
+		div.bar {
+			width: 100%;
+			display: block;
+			min-width: 0.1em;
+			background: #AAA;
+		}
+
+		&:hover {
+			border-color: #666;
+		}
+
+		&.right {
+			float: right;
+		}
+	}
+}
+
+// Form Display
+form {
+	width: 100%;
+
+	fieldset {
+		display: block;
+		float:left;
+		width: 30%;
+
+		label {
+			display: block;
+
+			span {
+				font-weight: bold;
+				display: block;
+			}
+
+			input {
+				border: dashed 2px #666;
+				.border-radius;
+				padding: 10px;
+				.box-sizing;
+				width: 100%;
+			}
+
+			select {
+				height: 37px;
+				.box-sizing;
+				width: 100%;
+			}
+		}
+	}
+}
+
+// Data Output
+table {
+	width: 100%;
+
+	th,
+	td {
+		border-bottom: solid 1px #666;
+		border-right: solid 1px #666;
+		padding: 5px;
+
+		&.right {
+			text-align: right;
+		}
+
+		&:last-child {
+			border-right: none;	
+		}
+
+		&.nowrap {
+			white-space: nowrap;
+		}
+	}
+}
