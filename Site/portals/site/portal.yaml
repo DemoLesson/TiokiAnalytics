@@ -1,4 +1,4 @@
 ---
 portal_route: 
-	Bundles\Controller\Bundle: enabled
 	Bundles\LHTML\Bundle: enabled
+	Bundles\Controller\Bundle: enabled
