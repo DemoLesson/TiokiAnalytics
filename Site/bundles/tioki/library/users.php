@@ -35,18 +35,22 @@ class Users {
 			$totals->skill_claims = $this->_list('skill_claims');
 			$totals->videos = $this->_list('videos');
 			$totals->connections = $this->_list('connections');
+			// Average Percent Complete
+			$totals->completion = $this->_list('users')
+				->replace_select_field('CEIL(AVG(`users`.`completion`)) as `_completion`');
 
 			// Clone the object
 			$raw = unserialize(serialize($totals));
 
-			// Average Percent Complete, Lets do this after the clone to conserve memory
-			$totals->completion = $this->_list('users')
-				->replace_select_field('CEIL(AVG(`users`.`completion`)) as `_completion`');
+			// Dont need to show raw totals
+			$all = false;
 
 			// Loop through the lists recursively
 			foreach($totals as $table => $l) {
 				if(!empty($_GET['user_test']) && $_GET['user_test'] == "- ALL -")
 					unset($_GET['user_test']);
+				if(!empty($_GET['user_type']) && $_GET['user_type'] == "- ALL -")
+					unset($_GET['user_type']);
 
 				// Collections of joins and conds
 				$joins = array();
@@ -57,8 +61,10 @@ class Users {
 				$joins[$table] = false;
 
 				// Filter by date created
-				if(!empty($_GET['date_start']) && !empty($_GET['date_end']))
+				if(!empty($_GET['date_start']) && !empty($_GET['date_end'])) {
 					$l = $l->manual_condition("date(`$table`.`created_at`) BETWEEN '$_GET[date_start]' AND '$_GET[date_end]'");
+					$all = true;
+				}
 
 				// Filter by user type
 				if(!empty($_GET['user_type'])) {
@@ -75,6 +81,7 @@ class Users {
 
 					if($_GET['user_type'] == 'educator') $condi[] = "`teachers`.`id` IS NOT NULL";
 					if($_GET['user_type'] == 'organization') $condi[] = "`schools`.`id` IS NOT NULL";
+					$all = true;
 				}
 
 				// Filter by user test
@@ -88,6 +95,7 @@ class Users {
 
 					if($_GET['user_test'] == 'default') $condi[] = "`users`.`ab` IS NULL";
 					else $condi[] = "`users`.`ab` = $_GET[user_test]";
+					$all = true;
 				}
 
 				if(!empty($_GET['range'])) {
@@ -103,6 +111,7 @@ class Users {
 						$joins['users'] = "LEFT JOIN `users` ON `$table`.`user_id` = `users`.`id`";
 
 					if($start < $end) $condi[] = "`users`.`id` BETWEEN '$start' AND '$end'";
+					$all = true;
 				}
 
 				if(!empty($_GET['complete'])) {
@@ -131,6 +140,7 @@ class Users {
 
 						if($start < $end) $condi[] = "`users`.`completion` BETWEEN '$start' AND '$end'";
 					}
+					$all = true;
 				}
 
 				foreach($joins as $join)
@@ -145,12 +155,8 @@ class Users {
 		catch(Exception $e) {
 			dump($e);
 		}
-		//dump($totals->connections->raw());
 
-		// Narrow down the data
-
-
-		return array('normal' => $totals, 'raw' => $raw, 'all' => true);
+		return array('normal' => $totals, 'raw' => $raw, 'all' => $all);
 	}
 
 	public function all() {

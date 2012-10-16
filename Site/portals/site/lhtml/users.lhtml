@@ -76,14 +76,18 @@
 					<strong>{totals.normal.connections.count}</strong>
 					 ({totals.raw.connections.count})
 				</td>
+				<td class="nowrap">
+					{totals.normal.completion.first._completion}% - AVG
+					 ({totals.raw.completion.first._completion}% - AVG)
+				</td>
 				<:else>
 					<td>{totals.normal.vouched_skills.count}</td>
 					<td>{totals.normal.skill_claims.count}</td>
 					<td>{totals.normal.videos.count}</td>
 					<td>{totals.normal.connections.count}</td>
+					<td>{totals.normal.completion.first._completion}% - AVG</td>
 				</:else>
 			</:if>
-			<td>{totals.normal.completion.first._completion}% - AVG</td>
 			<td>N/A</td>
 		</tr>
 		<tr><th :load="users.fields as field" :iterate="self">{field}</th></tr>
