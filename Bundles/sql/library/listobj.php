@@ -62,6 +62,7 @@ class ListObj implements \Iterator, \Countable {
 	protected $_group_cond = array();
 	protected $_distinct_cond = false;
 	protected $_custom_query;
+	protected $_pre = '';
 	
 	/**
 	 * Limit Conditions
@@ -186,6 +187,11 @@ class ListObj implements \Iterator, \Countable {
 		$this->_count = 0;
 		$this->_sum = array();
 		$this->_average = array();
+	}
+
+	public function prefix($pre = '') {
+		$this->_pre = $pre;
+		return $this;
 	}
 
 	/**
@@ -870,6 +876,11 @@ class ListObj implements \Iterator, \Countable {
 		} else {
 			$this->_query_history[] = $query;
 		}
+
+		/**
+		 * Add prefix on to the beginning
+		 */
+		$query = $this->_pre.' '.$query;
 
 		/**
 		 * Run query

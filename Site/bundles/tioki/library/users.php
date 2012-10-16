@@ -210,7 +210,7 @@ class Users {
 
 		// Prepare the counters
 		$counters = new StdClass;
-		foreach(array('events_rsvps','vouched_skills','skill_claims','videos','connections') as $table)
+		foreach(array('events_rsvps','vouched_skills','skill_claims','videos','connections', 'analytics') as $table)
 			$counters->{$table} = unserialize(serialize($l));
 
 		// Filter the counters
@@ -220,7 +220,11 @@ class Users {
 				$cl = $cl->join("RIGHT JOIN `videos` ON `teachers`.`id` = `videos`.`teacher_id`");	
 			}
 			else $cl = $cl->join("RIGHT JOIN `$table` ON `users`.`id` = `$table`.`user_id`");
-			$cl = $cl->replace_select_field("COUNT(*) as `count`, `users`.`id`")->group_by('`users`.`id`');
+			if($table == 'analytics') {
+				$cl = $cl->replace_select_field("GROUP_CONCAT(DISTINCT `$table`.`slug` SEPARATOR ', ') as `slugs`, `users`.`id`");
+				$cl = $cl->manual_condition("`analytics`.`slug` IS NOT NULL && `users`.`id` IS NOT NULL")->group_by('`users`.`id`');
+			}
+			else $cl = $cl->manual_condition("`users`.`id` IS NOT NULL")->replace_select_field("COUNT(*) as `count`, `users`.`id`")->group_by('`users`.`id`');
 		}
 
 		// Create a raw copy of the counters
@@ -238,7 +242,7 @@ class Users {
 				$cl = $cl->manual_condition($cond);
 		}
 
-		// Apple date restriction to the counters
+		// Apply date restriction to the counters
 		if(!empty($_GET['date_start']) && !empty($_GET['date_end'])) {
 			foreach($counters as $table => &$cl) {
 				if($table == 'events_rsvps') continue;
@@ -252,7 +256,7 @@ class Users {
 
 		// Join on the counters xD
 		$joins = array();
-		foreach($counters as $table => $cl) {
+		foreach($counters as $table => &$cl) {
 			$joins[$table] = "LEFT JOIN (".$cl->raw().") as `$table` ON `users`.`id` = `$table`.`id`";
 		}
 		foreach($raw_counters as $table => $cl) {
@@ -263,7 +267,9 @@ class Users {
 		// Alias the result
 		foreach($joins as $table => $join) {
 			$l = $l->join($join);
-			$l = $l->add_select_field("COALESCE(`$table`.`count`, 0) as `$table`");
+			if(strpos($table, 'analytics') !== FALSE)
+				$l = $l->add_select_field("COALESCE(`$table`.`slugs`, 'N/A') as `$table`");
+			else $l = $l->add_select_field("COALESCE(`$table`.`count`, 0) as `$table`");
 		}
 
 		//dump($l->raw());
