@@ -8,7 +8,6 @@ use e;
 
 class Users {
 
-	private $list;
 	public $fields = array(
 		'ID',
 		'Name',
@@ -21,10 +20,6 @@ class Users {
 		'Completion',
 		'Triggered Analytics'
 	);
-
-	public function __construct($sql) {
-		$this->list = $this->_list('users');
-	}
 
 	public function totals() {
 
@@ -62,7 +57,7 @@ class Users {
 
 				// Filter by date created
 				if(!empty($_GET['date_start']) && !empty($_GET['date_end'])) {
-					$l = $l->manual_condition("date(`$table`.`created_at`) BETWEEN '$_GET[date_start]' AND '$_GET[date_end]'");
+					$condi[] = "date(`$table`.`created_at`) BETWEEN '$_GET[date_start]' AND '$_GET[date_end]'";
 					$all = true;
 				}
 
@@ -160,7 +155,70 @@ class Users {
 	}
 
 	public function all() {
-		return $this->list;
+		$l = $this->_list('users');
+
+		// Joins and Conds storage
+		$joins = array();
+		$condi = array();
+
+		if(!empty($_GET['date_start']) && !empty($_GET['date_end']))
+			$condi[] = "date(`last_login`) BETWEEN '$_GET[date_start]' AND '$_GET[date_end]'";
+
+		if(!empty($_GET['user_type'])) {
+			if($_GET['user_type'] == 'educator') {
+				if(!array_key_exists('teachers', $joins))
+					$joins['teachers'] = "LEFT JOIN `teachers` ON `users`.`id` = `teachers`.`user_id`";
+				$condi[] = "`teachers`.`id` IS NOT NULL";
+			}
+			if($_GET['user_type'] == 'organization') {
+				if(!array_key_exists('schools', $joins))
+					$joins['schools'] = "LEFT JOIN `schools` ON `users`.`id` = `schools`.`owned_by`";
+				$condi[] = "`schools`.`id` IS NOT NULL";
+			}
+		}
+
+		if(!empty($_GET['user_test'])) {
+			if($_GET['user_test'] == 'default') $condi[] = "`users`.`ab` IS NULL";
+			else $condi[] = "`users`.`ab` = '$_GET[user_test]'";
+		}
+
+		if(!empty($_GET['range'])) {
+			list($start, $end) = explode('~', $_GET['range']);
+			if($start < $end) $condi[] = "`users`.`id` BETWEEN '$start' AND '$end'";
+		}
+
+		if(!empty($_GET['complete'])) {
+			if(preg_match("/(^[0-9]{1,3}).$/", $_GET['complete'])) {
+
+				// Get regex data
+				preg_match("/(^[0-9]{1,3})/", $_GET['complete'], $matches);
+				$operator = str_replace($matches[1], '', $_GET['complete']);
+
+				if(empty($operator)) $operator = '=';
+				$condi[] = "'$matches[1]' $operator `users`.`completion`";
+			}
+			else if(preg_match("/(^[0-9]{1,2})-([0-9]{1,3}$)/", $_GET['complete'], $matches)) {
+				
+				// Remove original
+				array_shift($matches);
+
+				list($start, $end) = $matches;
+
+				if($start < $end) $condi[] = "`users`.`completion` BETWEEN '$start' AND '$end'";
+			}
+		}
+
+		foreach($joins as $join)
+			$l = $l->join($join);
+		foreach($condi as $cond)
+			$l = $l->manual_condition($cond);
+
+		// Order by last login
+		$l = $l->order('`users`.`last_login`', 'DESC');
+
+		dump($l->raw());
+
+		return $l;
 	}
 
 	// Load Tables

@@ -91,7 +91,7 @@
 			<td>N/A</td>
 		</tr>
 		<tr><th :load="users.fields as field" :iterate="self">{field}</th></tr>
-		<tr :load="users.all.results as user" :iterate="self">
+		<tr :load="users.all as user" :iterate="self">
 			<td class="right"><strong>{user.id}</strong></td>
 			<td>{user.name} - LINK</td>
 			<td>{user.email}</td>

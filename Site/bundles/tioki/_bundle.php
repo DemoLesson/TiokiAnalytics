@@ -13,11 +13,11 @@ class Bundle {
 	}
 	
 	public function users() {
-		return new Users($this->sql);
+		return new Users;
 	}
 
 	public function slugs() {
-		return new Users($this->sql);
+		return new Users;
 	}
 
 }
