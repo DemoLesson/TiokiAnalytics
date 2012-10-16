@@ -1,6 +1,6 @@
 ---
 development.master: true
 development.trace: true
-sql.connection.default: mysql://root@127.0.0.1/tioki_analytics
+sql.connection.default: mysql://root@127.0.0.1/demolesson_analytics
 sql.connection.tioki: mysql://root@127.0.0.1/demolesson_development
 sql.enabled: true

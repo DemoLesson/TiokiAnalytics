@@ -1,0 +1,164 @@
+<?php
+
+namespace Bundles\Tioki;
+use Bundles\SQL\ListObj;
+use Exception;
+use StdClass;
+use e;
+
+class Users {
+
+	private $list;
+	public $fields = array(
+		'ID',
+		'Name',
+		'Email',
+		'RSVPs',
+		'Vouches',
+		'Skills',
+		'Videos',
+		'Connections',
+		'Completion',
+		'Triggered Analytics'
+	);
+
+	public function __construct($sql) {
+		$this->list = $this->_list('users');
+	}
+
+	public function totals() {
+
+		// Get the totals for specific tables
+		try {
+			$totals = new StdClass;
+			$totals->vouched_skills = $this->_list('vouched_skills');
+			$totals->skill_claims = $this->_list('skill_claims');
+			$totals->videos = $this->_list('videos');
+			$totals->connections = $this->_list('connections');
+
+			// Clone the object
+			$raw = unserialize(serialize($totals));
+
+			// Average Percent Complete, Lets do this after the clone to conserve memory
+			$totals->completion = $this->_list('users')
+				->replace_select_field('CEIL(AVG(`users`.`completion`)) as `_completion`');
+
+			// Loop through the lists recursively
+			foreach($totals as $table => $l) {
+				if(!empty($_GET['user_test']) && $_GET['user_test'] == "- ALL -")
+					unset($_GET['user_test']);
+
+				// Collections of joins and conds
+				$joins = array();
+				$condi = array();
+
+				// If this is the completion percentage then add it
+				if($table == 'completion') $table = 'users';
+				$joins[$table] = false;
+
+				// Filter by date created
+				if(!empty($_GET['date_start']) && !empty($_GET['date_end']))
+					$l = $l->manual_condition("date(`$table`.`created_at`) BETWEEN '$_GET[date_start]' AND '$_GET[date_end]'");
+
+				// Filter by user type
+				if(!empty($_GET['user_type'])) {
+					if(!array_key_exists('teachers', $joins) && $table == 'videos')
+						$joins['teachers'] = "LEFT JOIN `teachers` ON `videos`.`teacher_id` = `teachers`.`id`";
+					if(!array_key_exists('users', $joins) && $table == 'videos')
+						$joins['users'] = "LEFT JOIN `users` ON `teachers`.`user_id` = `users`.`id`";
+					if(!array_key_exists('users', $joins) && ($table != 'users' || $table != 'videos'))
+						$joins['users'] = "LEFT JOIN `users` ON `$table`.`user_id` = `users`.`id`";
+					if(!array_key_exists('teachers', $joins) && $_GET['user_type'] == 'educator')
+						$joins['teachers'] = "LEFT JOIN `teachers` ON `users`.`id` = `teachers`.`user_id`";
+					if(!array_key_exists('schools', $joins) && $_GET['user_type'] == 'organization')
+						$joins['schools'] = "LEFT JOIN `schools` ON `users`.`id` = `schools`.`owned_by`";
+
+					if($_GET['user_type'] == 'educator') $condi[] = "`teachers`.`id` IS NOT NULL";
+					if($_GET['user_type'] == 'organization') $condi[] = "`schools`.`id` IS NOT NULL";
+				}
+
+				// Filter by user test
+				if(!empty($_GET['user_test'])) {
+					if(!array_key_exists('teachers', $joins) && $table == 'videos')
+						$joins['teachers'] = "LEFT JOIN `teachers` ON `videos`.`teacher_id` = `teachers`.`id`";
+					if(!array_key_exists('users', $joins) && $table == 'videos')
+						$joins['users'] = "LEFT JOIN `users` ON `teachers`.`user_id` = `users`.`user_id`";
+					if(!array_key_exists('users', $joins) && $table != 'videos' && $table != 'users')
+						$joins['users'] = "LEFT JOIN `users` ON `$table`.`user_id` = `users`.`id`";
+
+					if($_GET['user_test'] == 'default') $condi[] = "`users`.`ab` IS NULL";
+					else $condi[] = "`users`.`ab` = $_GET[user_test]";
+				}
+
+				if(!empty($_GET['range'])) {
+
+					// Split Start and end
+					list($start, $end) = explode('~', $_GET['range']);
+
+					if(!array_key_exists('teachers', $joins) && $table == 'videos')
+						$joins['teachers'] = "LEFT JOIN `teachers` ON `videos`.`teacher_id` = `teachers`.`id`";
+					if(!array_key_exists('users', $joins) && $table == 'videos')
+						$joins['users'] = "LEFT JOIN `users` ON `teachers`.`user_id` = `users`.`user_id`";
+					if(!array_key_exists('users', $joins) && $table != 'videos' && $table != 'users')
+						$joins['users'] = "LEFT JOIN `users` ON `$table`.`user_id` = `users`.`id`";
+
+					if($start < $end) $condi[] = "`users`.`id` BETWEEN '$start' AND '$end'";
+				}
+
+				if(!empty($_GET['complete'])) {
+					if(!array_key_exists('teachers', $joins) && $table == 'videos')
+						$joins['teachers'] = "LEFT JOIN `teachers` ON `videos`.`teacher_id` = `teachers`.`id`";
+					if(!array_key_exists('users', $joins) && $table == 'videos')
+						$joins['users'] = "LEFT JOIN `users` ON `teachers`.`user_id` = `users`.`user_id`";
+					if(!array_key_exists('users', $joins) && $table != 'videos' && $table != 'users')
+						$joins['users'] = "LEFT JOIN `users` ON `$table`.`user_id` = `users`.`id`";
+
+					if(preg_match("/(^[0-9]{1,3}).$/", $_GET['complete'])) {
+
+						// Get regex data
+						preg_match("/(^[0-9]{1,3})/", $_GET['complete'], $matches);
+						$operator = str_replace($matches[1], '', $_GET['complete']);
+
+						if(empty($operator)) $operator = '=';
+						$condi[] = "'$matches[1]' $operator `users`.`completion`";
+					}
+					else if(preg_match("/(^[0-9]{1,2})-([0-9]{1,3}$)/", $_GET['complete'], $matches)) {
+						
+						// Remove original
+						array_shift($matches);
+
+						list($start, $end) = $matches;
+
+						if($start < $end) $condi[] = "`users`.`completion` BETWEEN '$start' AND '$end'";
+					}
+				}
+
+				foreach($joins as $join)
+					$l = $l->join($join);
+				foreach($condi as $cond)
+					$l = $l->manual_condition($cond);
+			}
+
+			// Event RSVPs added after as filters dont work to well
+			$totals->events_rsvps = $this->_list('events_rsvps');
+		}
+		catch(Exception $e) {
+			dump($e);
+		}
+		//dump($totals->connections->raw());
+
+		// Narrow down the data
+
+
+		return array('normal' => $totals, 'raw' => $raw, 'all' => true);
+	}
+
+	public function all() {
+		return $this->list;
+	}
+
+	// Load Tables
+	private function _list($table) {
+		return new ListObj($table, 'tioki');
+	}
+}

@@ -53,46 +53,46 @@
 	<div class="clear"></div>
 
 	<table>
-		<tr><th :load="users.all.fields as field" :iterate="self">{field}</th></tr>
-		<tr :load="users.all.totals as totals">
+		<tr><th :load="users.fields as field" :iterate="self">{field}</th></tr>
+		<tr :load="users.totals as totals">
 			<td class="right"><strong>*</strong></td>
 			<td>All</td>
 			<td>N/A</td>
-			<td>{totals.events_rsvps.count}</td>
-			<:if cond="totals.all == true">
+			<td>{totals.normal.events_rsvps.count}</td>
+			<:if cond="{totals.all} == true">
 				<td class="nowrap">
-					<strong>{totals.vouched_skills.count}</strong>
-					 ({totals.vouched_skills.raw})
+					<strong>{totals.normal.vouched_skills.count}</strong>
+					 ({totals.raw.vouched_skills.count})
 				</td>
 				<td class="nowrap">
-					<strong>{totals.skill_claims.count}</strong>
-					 ({totals.skill_claims.raw})
+					<strong>{totals.normal.skill_claims.count}</strong>
+					 ({totals.raw.skill_claims.count})
 				</td>
 				<td class="nowrap">
-					<strong>{totals.videos.count}</strong>
-					 ({totals.videos.raw})
+					<strong>{totals.normal.videos.count}</strong>
+					 ({totals.raw.videos.count})
 				</td>
 				<td class="nowrap">
-					<strong>{totals.connections.count}</strong>
-					 ({totals.connections.raw})
+					<strong>{totals.normal.connections.count}</strong>
+					 ({totals.raw.connections.count})
 				</td>
 				<:else>
-					<td>{totals.vouched_skills.count}</td>
-					<td>{totals.skill_claims.count}</td>
-					<td>{totals.videos.count}</td>
-					<td>{totals.connections.count}</td>
+					<td>{totals.normal.vouched_skills.count}</td>
+					<td>{totals.normal.skill_claims.count}</td>
+					<td>{totals.normal.videos.count}</td>
+					<td>{totals.normal.connections.count}</td>
 				</:else>
 			</:if>
-			<td>{totals.completion.count}% - AVG</td>
+			<td>{totals.normal.completion.first._completion}% - AVG</td>
 			<td>N/A</td>
 		</tr>
-		<tr><th :load="users.all.fields as field" :iterate="self">{field}</th></tr>
+		<tr><th :load="users.fields as field" :iterate="self">{field}</th></tr>
 		<tr :load="users.all.results as user" :iterate="self">
 			<td class="right"><strong>{user.id}</strong></td>
 			<td>{user.name} - LINK</td>
 			<td>{user.email}</td>
 			<td>{user.rsvp.count}</td>
-			<:if cond="users.totals.all == true">
+			<:if cond="{users.totals.all} == true">
 				<td class="nowrap">
 					<strong>{user.vouched_skills.count}</strong>
 					 ({user.vouched_skills.raw})
