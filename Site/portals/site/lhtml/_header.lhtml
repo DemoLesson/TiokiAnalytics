@@ -8,6 +8,7 @@
 <h1 class="header">Analytical Center</h1>
 <ul class="menu">
 	<li><a href="/users">Users Analytics</a></li>
-	<li><a href="/slugs">Slugs Analytics</a></li>
-	<li class="right"><a href="/">Site Root</a></li>
+	<li><a href="/users/excel">Users Analytics Excel</a></li>
+	<!--#li><a href="/slugs">Slugs Analytics</a></li-->
+	<li class="right"><a href="http://tioki.com">Site Root</a></li>
 </ul>
