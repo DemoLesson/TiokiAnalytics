@@ -151,7 +151,7 @@ class Users {
 			dump($e);
 		}
 
-		return array('normal' => $totals, 'raw' => $raw, 'all' => $all);
+		return (object) array('normal' => $totals, 'raw' => $raw, 'all' => $all);
 	}
 
 	public function all() {
