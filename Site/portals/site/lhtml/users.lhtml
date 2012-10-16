@@ -95,29 +95,29 @@
 			<td class="right"><strong>{user.id}</strong></td>
 			<td>{user.name} - LINK</td>
 			<td>{user.email}</td>
-			<td>{user.rsvp.count}</td>
+			<td>{user.events_rsvps}</td>
 			<:if cond="{users.totals.all} == true">
 				<td class="nowrap">
-					<strong>{user.vouched_skills.count}</strong>
-					 ({user.vouched_skills.raw})
+					<strong>{user.vouched_skills}</strong>
+					 ({user.raw_vouched_skills})
 				</td>
 				<td class="nowrap">
-					<strong>{user.skill_claims.count}</strong>
-					 ({user.skill_claims.raw})
+					<strong>{user.skill_claims}</strong>
+					 ({user.raw_skill_claims})
 				</td>
 				<td class="nowrap">
-					<strong>{user.videos.count}</strong>
-					 ({user.videos.raw})
+					<strong>{user.videos}</strong>
+					 ({user.raw_videos})
 				</td>
 				<td class="nowrap">
-					<strong>{user.connections.count}</strong>
-					 ({user.connections.raw})
+					<strong>{user.connections}</strong>
+					 ({user.raw_connections})
 				</td>
 				<:else>
-					<td>{user.vouched_skills.count}</td>
-					<td>{user.skills.count}</td>
-					<td>{user.videos.count}</td>
-					<td>{user.connections.count}</td>
+					<td>{user.vouched_skills}</td>
+					<td>{user.skill_claims}</td>
+					<td>{user.videos}</td>
+					<td>{user.connections}</td>
 				</:else>
 			</:if>
 			<td>{user.completion}%</td>

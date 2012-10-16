@@ -162,7 +162,7 @@ class Users {
 		$condi = array();
 
 		if(!empty($_GET['date_start']) && !empty($_GET['date_end']))
-			$condi[] = "date(`last_login`) BETWEEN '$_GET[date_start]' AND '$_GET[date_end]'";
+			$condi[] = "date(`users`.`last_login`) BETWEEN '$_GET[date_start]' AND '$_GET[date_end]'";
 
 		if(!empty($_GET['user_type'])) {
 			if($_GET['user_type'] == 'educator') {
@@ -208,15 +208,65 @@ class Users {
 			}
 		}
 
-		foreach($joins as $join)
+		// Prepare the counters
+		$counters = new StdClass;
+		foreach(array('events_rsvps','vouched_skills','skill_claims','videos','connections') as $table)
+			$counters->{$table} = unserialize(serialize($l));
+
+		// Filter the counters
+		foreach($counters as $table => &$cl) {
+			if($table == 'videos') {
+				$cl = $cl->join("RIGHT JOIN `teachers` ON `users`.`id` = `teachers`.`user_id`");
+				$cl = $cl->join("RIGHT JOIN `videos` ON `teachers`.`id` = `videos`.`teacher_id`");	
+			}
+			else $cl = $cl->join("RIGHT JOIN `$table` ON `users`.`id` = `$table`.`user_id`");
+			$cl = $cl->replace_select_field("COUNT(*) as `count`, `users`.`id`")->group_by('`users`.`id`');
+		}
+
+		// Create a raw copy of the counters
+		$raw_counters = unserialize(serialize($counters));
+
+		// Apply the joins and conditions
+		foreach($joins as $join) {
 			$l = $l->join($join);
-		foreach($condi as $cond)
+			foreach($counters as &$cl)
+				$cl = $cl->join($join);
+		}
+		foreach($condi as $cond) {
 			$l = $l->manual_condition($cond);
+			foreach($counters as &$cl)
+				$cl = $cl->manual_condition($cond);
+		}
+
+		// Apple date restriction to the counters
+		if(!empty($_GET['date_start']) && !empty($_GET['date_end'])) {
+			foreach($counters as $table => &$cl) {
+				if($table == 'events_rsvps') continue;
+				$cl = $cl->manual_condition("date(`$table`.`created_at`) BETWEEN '$_GET[date_start]' AND '$_GET[date_end]'");
+			}
+		}
 
 		// Order by last login
 		$l = $l->order('`users`.`last_login`', 'DESC');
+		$l = $l->replace_select_field('`users`.*');
 
-		dump($l->raw());
+		// Join on the counters xD
+		$joins = array();
+		foreach($counters as $table => $cl) {
+			$joins[$table] = "LEFT JOIN (".$cl->raw().") as `$table` ON `users`.`id` = `$table`.`id`";
+		}
+		foreach($raw_counters as $table => $cl) {
+			$table = 'raw_'.$table;
+			$joins[$table] = "LEFT JOIN (".$cl->raw().") as `$table` ON `users`.`id` = `$table`.`id`";
+		}
+
+		// Alias the result
+		foreach($joins as $table => $join) {
+			$l = $l->join($join);
+			$l = $l->add_select_field("COALESCE(`$table`.`count`, 0) as `$table`");
+		}
+
+		//dump($l->raw());
 
 		return $l;
 	}

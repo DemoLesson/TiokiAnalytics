@@ -768,7 +768,8 @@ class ListObj implements \Iterator, \Countable {
 		 */
 		if(count($this->_group_cond) > 0) {
 			foreach($this->_group_cond as $key => $condi) {
-				$gc[] = $count == 'sum' ? "`_group`" : "`$condi`";
+				$condi = strpos($condi, "`") === 0 ? $condi : "`$condi`";
+				$gc[] = $count == 'sum' ? "`_group`" : $condi;
 			}
 			$gc = implode(', ', $gc);
 			$cond .= 'GROUP BY '.$gc;
